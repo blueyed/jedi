@@ -224,6 +224,8 @@ class ClassMixin(object):
 
     def get_signatures(self):
         init_funcs = self.execute_evaluated().py__getattribute__('__init__')
+        if not init_funcs:
+            init_funcs = self.py__getattribute__('__init__')
         return [sig.bind(self) for sig in init_funcs.get_signatures()]
 
     def get_global_filter(self, until_position=None, origin_scope=None):

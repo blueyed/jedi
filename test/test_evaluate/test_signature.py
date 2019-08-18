@@ -186,14 +186,26 @@ def test_nested_signatures(Script, environment, combination, expected, skip_pre_
     assert expected == computed
 
 
-def test_pow_signature(Script):
-    # See github #1357
-    sigs = Script('pow(').call_signatures()
+@pytest.mark.parametrize(
+    'code, expected',
+    [
+        [
+            # See github #1357
+            'pow(',
+            {
+                'pow(x: float, y: float, z: float, /) -> float',
+                'pow(x: float, y: float, /) -> float',
+                'pow(x: int, y: int, z: int, /) -> Any',
+                'pow(x: int, y: int, /) -> Any',
+            },
+        ],
+        ['staticmethod(', {'staticmethod(f: Callable)'}],
+    ],
+)
+def test_basic_signatures(code, expected, Script):
+    sigs = Script(code).call_signatures()
     strings = {sig.to_string() for sig in sigs}
-    assert strings == {'pow(x: float, y: float, z: float, /) -> float',
-                       'pow(x: float, y: float, /) -> float',
-                       'pow(x: int, y: int, z: int, /) -> Any',
-                       'pow(x: int, y: int, /) -> Any'}
+    assert strings == expected
 
 
 @pytest.mark.parametrize(
@@ -224,6 +236,7 @@ def test_pow_signature(Script):
                 return wrapper
 
             x(f)('''), 'f()'],
+        ['staticmethod(', 'staticmethod(f: Callable)'],
     ]
 )
 def test_wraps_signature(Script, code, signature, skip_pre_python35):
